@@ -49,7 +49,9 @@ export async function POST(req: NextRequest) {
     let reply = '';
 
     if (model === 'gemini') {
-      reply = await callGemini(sysPrompt, ctx);
+      reply = await callGemini(sysPrompt, ctx, 'gemini-3-flash-preview');
+    } else if (model === 'gemma_4_31b') {
+      reply = await callGemini(sysPrompt, ctx, 'gemma-4-31b-it');
     } else if (model === 'ollama') {
       reply = await callOllama(sysPrompt, ctx, ollamaModel ?? 'llama3.2');
     } else {
@@ -98,7 +100,7 @@ async function callSerper(query: string): Promise<string> {
 }
 
 // ── Gemini ────────────────────────────────────────────────────────────────────
-async function callGemini(systemPrompt: string, messages: ChatMessage[]) {
+async function callGemini(systemPrompt: string, messages: ChatMessage[], modelName = 'gemini-3-flash-preview') {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY not set');
 
@@ -108,7 +110,7 @@ async function callGemini(systemPrompt: string, messages: ChatMessage[]) {
   }));
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -101,6 +101,10 @@ Kemudian isi file `.env.local` dengan API key kamu:
 GEMINI_API_KEY=isi_dengan_api_key_kamu
 GROQ_API_KEY=isi_dengan_api_key_kamu
 SERPER_API_KEY=isi_dengan_api_key_kamu
+
+# Opsional: Aktifkan Secret Login Gate
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=rahasia
 ```
 
 > Cara mendapatkan masing-masing API key dijelaskan secara detail di [Module 0](Module/Module%200/Module%200%20-%20Environment.md).
@@ -157,13 +161,16 @@ Aplikasi **AI Quest Dashboard** yang dibangun di workshop ini memiliki fitur:
 
 - **Mission Dashboard** — Progress tracker berbentuk quest board ala RPG
 - **Chatbot** — Interaksi langsung dengan model LLM pilihan
-- **Multi-Model Selector** — Switch antara Gemini, GPT-OSS (Groq), LLaMA, dan Ollama
+- **Multi-Model Selector** — Switch antara Gemini, Groq, dan Ollama dengan dropdown list model spesifik
+- **Ollama Auto-Detection** — Otomatis mendeteksi dan menggunakan model lokal yang sudah terinstall di komputermu
 - **Permanent Inventory** — Knowledge base hardcoded dari folder `/public/knowledge/`
 - **File Upload** — Upload file CSV/TXT langsung ke sesi chat
 - **RAG Mode** — Otomatis aktif saat file knowledge base dihubungkan
+- **Web Intelligence** — Pencarian internet real-time via Serper API
 - **System Prompt Editor** — Kustomisasi persona dan instruksi model
 - **Achievement System** — Pop-up notifikasi saat quest diselesaikan
-- **Player Stats** — Karakter pilihan dengan skill tree progress
+- **Player Stats & Reset Progress** — Halaman profil karakter dengan fitur reset *"Danger Zone"* untuk menghapus progress workshop
+- **Secret Login Gate** — Fitur misteri ("NONE SHALL PASS") yang akan mengunci aplikasi jika kredensial admin diisi di `.env.local`
 
 ---
 

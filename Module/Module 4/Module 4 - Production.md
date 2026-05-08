@@ -168,8 +168,8 @@ Lakukan pengecekan berikut di URL publik tersebut:
 - [ ] Bisa mengirim pesan dan mendapat respons dari LLM
 - [ ] Permanent Inventory menampilkan file dari `public/knowledge/`
 
-> *Screenshot aplikasi yang sudah live — COMING SOON!*
-> ![Live App Screenshot](COMING_SOON)
+> *Screenshot aplikasi yang sudah live*
+> ![Live App Screenshot](images/Vercel-LiveApp.png)
 
 ---
 

@@ -8,14 +8,46 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 type PFile = { name: string; content: string };
 type UFile = { id: string; name: string; content: string };
 
-const MODELS = [
-  { id: 'gemini', label: 'Gemini', sub: 'Google AI', key: 'gemini' as const, icon: Zap, color: '#249fde' },
-  { id: 'groq_120', label: 'GPT-OSS 120B', sub: 'Groq', key: 'groq' as const, icon: Flame, color: '#df3e23' },
-  { id: 'groq_20', label: 'GPT-OSS 20B', sub: 'Groq', key: 'groq' as const, icon: Flame, color: '#fa6a0a' },
-  { id: 'llama4', label: 'Llama 4 Scout', sub: 'Groq', key: 'groq' as const, icon: Cpu, color: '#d6f264' },
-  { id: 'llama33', label: 'Llama 3.3 70B', sub: 'Groq', key: 'groq' as const, icon: Cpu, color: '#9cdb43' },
-  { id: 'llama_8b', label: 'Llama 3.1 8B', sub: 'Groq', key: 'groq' as const, icon: Cpu, color: '#59c135' },
-  { id: 'ollama', label: 'Ollama', sub: 'Local', key: 'ollama' as const, icon: Package, color: '#bc4a9b' },
+// ── Provider + model catalogue ──────────────────────────────────────────────
+const PROVIDERS = [
+  {
+    id:     'gemini',
+    label:  'Gemini',
+    sub:    'Google AI',
+    key:    'gemini' as const,
+    icon:   Zap,
+    color:  '#249fde',
+    models: [
+      { id: 'gemini',       label: 'Gemini 2.5 Flash',   apiId: 'gemini' },
+      { id: 'gemma_4_31b',  label: 'Gemma 4 31B',        apiId: 'gemma_4_31b' },
+    ],
+  },
+  {
+    id:     'groq',
+    label:  'Groq',
+    sub:    'Cloud Inference',
+    key:    'groq' as const,
+    icon:   Flame,
+    color:  '#fa6a0a',
+    models: [
+      { id: 'groq_120', label: 'GPT-OSS 120B',    apiId: 'groq_120' },
+      { id: 'groq_20',  label: 'GPT-OSS 20B',     apiId: 'groq_20'  },
+      { id: 'llama4',   label: 'Llama 4 Scout',   apiId: 'llama4'   },
+      { id: 'llama33',  label: 'Llama 3.3 70B',   apiId: 'llama33'  },
+      { id: 'llama_8b', label: 'Llama 3.1 8B',    apiId: 'llama_8b' },
+    ],
+  },
+  {
+    id:     'ollama',
+    label:  'Ollama',
+    sub:    'Local LLM',
+    key:    'ollama' as const,
+    icon:   Package,
+    color:  '#bc4a9b',
+    models: [
+      { id: 'ollama', label: 'Auto-detected', apiId: 'ollama' },
+    ],
+  },
 ];
 
 export default function ChatbotPage() {
@@ -28,17 +60,19 @@ export default function ChatbotPage() {
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini');
-  const [isThinking, setIsThinking] = useState(false);
-  const [error, setError] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState('gemini');
+  const [selectedModel,    setSelectedModel]    = useState('gemini');
+  const [isThinking,   setIsThinking]   = useState(false);
+  const [error,        setError]        = useState('');
   const [systemMessage, setSystemMessage] = useState(DEFAULT_SYS_MSG);
-  const [sysOpen, setSysOpen] = useState(false);
+  const [sysOpen,      setSysOpen]      = useState(false);
   const [permanentFiles, setPermanentFiles] = useState<PFile[]>([]);
-  const [activePermIds, setActivePermIds] = useState<Set<string>>(new Set());
-  const [uploadedFiles, setUploadedFiles] = useState<UFile[]>([]);
+  const [activePermIds,  setActivePermIds]  = useState<Set<string>>(new Set());
+  const [uploadedFiles,  setUploadedFiles]  = useState<UFile[]>([]);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-  const [lastSearched, setLastSearched] = useState(false);
-  const [ollamaModel, setOllamaModel] = useState<string>('llama3.2');
+  const [lastSearched,   setLastSearched]   = useState(false);
+  const [ollamaModel,    setOllamaModel]    = useState<string>('');
+  const [ollamaModels,   setOllamaModels]   = useState<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Load permanent knowledge files on mount
@@ -48,13 +82,14 @@ export default function ChatbotPage() {
       .then(d => setPermanentFiles(d.files ?? []));
   }, []);
 
-  // Auto-detect Ollama on mount — finds installed models dynamically
+  // Auto-detect Ollama on mount — finds installed CHAT models (embedding models filtered out)
   useEffect(() => {
     fetch('/api/ollama-ping')
       .then(r => r.json())
       .then(d => {
-        if (d.available && d.model) {
-          setOllamaModel(d.model);
+        if (d.available && d.models?.length > 0) {
+          setOllamaModels(d.models);      // full list for dropdown
+          setOllamaModel(d.models[0]);    // first chat model as default
           connectOllama();
         }
       })
@@ -155,6 +190,9 @@ export default function ChatbotPage() {
     if (val !== DEFAULT_SYS_MSG) markSystemMessageModified();
   }
 
+  // Derived — active provider definition
+  const activeProvider = PROVIDERS.find(p => p.id === selectedProvider) ?? PROVIDERS[0];
+
   const panelStyle = {
     background: 'var(--aap-dark3)', border: '4px solid var(--aap-grey)',
     boxShadow: 'inset -4px -4px 0 var(--aap-darkest), 4px 4px 0 var(--aap-darkest)',
@@ -166,33 +204,101 @@ export default function ChatbotPage() {
       {/* MODEL SELECTOR */}
       <div style={{ ...panelStyle, padding: 12, flexShrink: 0 }}>
         <p style={{ fontSize: 9, color: 'var(--aap-yellow)', marginBottom: 10 }}>SELECT CHAMPION</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8 }}>
-          {MODELS.map(m => {
-            const locked = !quests[m.key];
-            const active = selectedModel === m.id && !locked;
-            const Icon = m.icon;
+
+        {/* Provider tabs */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 10 }}>
+          {PROVIDERS.map(p => {
+            const locked  = !quests[p.key];
+            const active  = selectedProvider === p.id && !locked;
+            const Icon    = p.icon;
             return (
-              <div key={m.id} onClick={() => !locked && setSelectedModel(m.id)}
+              <div
+                key={p.id}
+                onClick={() => {
+                  if (locked) return;
+                  setSelectedProvider(p.id);
+                  // Auto-select first model of this provider
+                  setSelectedModel(p.models[0].apiId);
+                }}
                 style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  justifyContent: 'center', gap: 4, padding: '8px 4px',
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
                   cursor: locked ? 'not-allowed' : 'pointer', userSelect: 'none',
-                  border: `4px solid ${active ? m.color : locked ? 'var(--aap-slate-dark)' : 'var(--aap-slate)'}`,
+                  border: `4px solid ${active ? p.color : locked ? 'var(--aap-slate-dark)' : 'var(--aap-slate)'}`,
                   background: active ? 'var(--aap-navy)' : locked ? 'var(--aap-darkest)' : 'var(--aap-dark2)',
-                  opacity: locked ? 0.4 : 1,
-                  boxShadow: active ? `0 0 8px ${m.color}` : 'none',
-                }}>
+                  opacity: locked ? 0.45 : 1,
+                  boxShadow: active ? `0 0 10px ${p.color}55` : 'none',
+                  transition: 'border 0.1s, background 0.1s',
+                }}
+              >
                 {locked
-                  ? <Lock size={12} style={{ color: 'var(--aap-slate)' }} />
-                  : <Icon size={12} style={{ color: active ? m.color : 'var(--aap-grey)' }} />}
-                <span style={{ fontSize: 7, color: active ? m.color : locked ? 'var(--aap-slate)' : 'var(--aap-grey-lt)', textAlign: 'center' }}>
-                  {locked ? 'LOCKED' : m.label}
-                </span>
-                {!locked && <span style={{ fontSize: 6, color: 'var(--aap-grey-dark)' }}>{m.sub}</span>}
+                  ? <Lock size={13} style={{ color: 'var(--aap-slate)', flexShrink: 0 }} />
+                  : <Icon size={13} style={{ color: active ? p.color : 'var(--aap-grey)', flexShrink: 0 }} />}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 8, color: active ? p.color : locked ? 'var(--aap-slate)' : 'var(--aap-grey-lt)', whiteSpace: 'nowrap' }}>
+                    {locked ? 'LOCKED' : p.label}
+                  </div>
+                  {!locked && (
+                    <div style={{ fontSize: 6, color: 'var(--aap-grey-dark)', whiteSpace: 'nowrap' }}>{p.sub}</div>
+                  )}
+                </div>
+                {!locked && active && (
+                  <div style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
+                )}
               </div>
             );
           })}
         </div>
+
+        {/* Model dropdown for selected provider */}
+        {(() => {
+          const locked = !quests[activeProvider.key];
+          if (locked) return null;
+
+          // For Ollama: use the dynamically detected models list
+          const isOllama = activeProvider.id === 'ollama';
+          const dropdownOptions = isOllama
+            ? ollamaModels.length > 0
+                ? ollamaModels.map(name => ({ value: name, label: name }))
+                : [{ value: '', label: 'No models detected' }]
+            : activeProvider.models.map(m => ({ value: m.apiId, label: m.label }));
+
+          // Controlled value: Ollama uses ollamaModel; others use selectedModel
+          const dropdownValue  = isOllama ? ollamaModel : selectedModel;
+          const handleDropdown = (val: string) => {
+            if (isOllama) setOllamaModel(val);
+            else          setSelectedModel(val);
+          };
+
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 7, color: 'var(--aap-grey-dark)', flexShrink: 0 }}>MODEL:</span>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <select
+                  value={dropdownValue}
+                  onChange={e => handleDropdown(e.target.value)}
+                  style={{
+                    width: '100%', fontSize: 8, padding: '6px 28px 6px 8px',
+                    background: 'var(--aap-dark2)', border: `2px solid ${activeProvider.color}`,
+                    color: activeProvider.color, fontFamily: 'inherit', outline: 'none',
+                    cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none',
+                  }}
+                >
+                  {dropdownOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={10}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%',
+                    transform: 'translateY(-50%)', pointerEvents: 'none',
+                    color: activeProvider.color,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* MAIN ROW */}

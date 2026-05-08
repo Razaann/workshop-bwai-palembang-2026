@@ -31,7 +31,20 @@
 
 > *Diagram arsitektur — lihat gambar di bawah:*
 
-![Workflow Diagram](images/Workflow.png)
+```mermaid
+flowchart LR
+    LLM["LLM Models\n(Gemini / Groq / Ollama)"]
+
+    subgraph pipeline["Inference Pipeline"]
+        A(["User"]) --> B["Ask Question"]
+        B --> C["Data Wrangling"]
+        C --> D["Prompt Formulation"]
+        D --> E["Formulates Answer"]
+        E --> F["Receives Answer"]
+    end
+
+    LLM -. provides model .-> E
+```
 
 ---
 
@@ -42,7 +55,7 @@
 ### Clone Repository
 
 ```bash
-git clone [COMING SOON!]
+git clone https://github.com/Bayhaqieee/workshop-bwai-palembang-2026.git
 cd workshop-bwai-palembang-2026
 ```
 

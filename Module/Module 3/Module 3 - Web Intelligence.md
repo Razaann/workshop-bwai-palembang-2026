@@ -38,7 +38,26 @@ AI konvensional hanya **menjawab** berdasarkan data yang ada di memori training-
 
 > *Diagram Tool Calling — lihat gambar di bawah:*
 
-![Workflow Tool Calling](images/Workflow.png)
+```mermaid
+flowchart LR
+    LLM["LLM Models\n(Gemini / Groq / Ollama)"]
+
+    subgraph pipeline["Inference Pipeline"]
+        A(["User"]) --> B["Ask Question"]
+        B --> C["Data Wrangling"]
+        C --> D["Prompt Formulation"]
+        D --> E["Formulates Answer"]
+        E --> F["Receives Answer"]
+    end
+
+    subgraph sources["Knowledge Sources"]
+        Doc["Document"] --> KS["Knowledge Store"]
+        OS["Online Search\n(Serper API)"] <--> KS
+    end
+
+    LLM -. provides model .-> E
+    KS --> C
+```
 
 ---
 
@@ -136,9 +155,6 @@ Apa itu machine learning?
 Jelaskan cara kerja neural network.
 Bantu saya debug kode Python ini.
 ```
-
-> *Video demo web search — COMING SOON!*
-> [![Demo Web Search Module 3](COMING_SOON)](COMING_SOON)
 
 ---
 

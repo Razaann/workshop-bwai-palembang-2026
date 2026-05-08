@@ -1,30 +1,46 @@
 import { NextResponse } from 'next/server';
 
-// Pings Ollama at localhost:11434 and returns the first available model name
+// Patterns that identify embedding / non-chat models — filter these out
+const EMBEDDING_PATTERNS = [
+  'embedding', 'embed', 'mpnet', 'paraphrase',
+  'e5-', 'bge-', 'nomic-embed', 'minilm',
+];
+
+function isEmbeddingModel(name: string): boolean {
+  const lower = name.toLowerCase();
+  return EMBEDDING_PATTERNS.some(p => lower.includes(p));
+}
+
+// Pings Ollama at localhost:11434, returns all CHAT models (embedding models filtered out)
 export async function GET() {
   try {
     const res = await fetch('http://localhost:11434/api/tags', {
-      signal: AbortSignal.timeout(3000), // 3 second timeout
+      signal: AbortSignal.timeout(3000),
     });
 
     if (!res.ok) {
-      return NextResponse.json({ available: false, model: null });
+      return NextResponse.json({ available: false, model: null, models: [] });
     }
 
     const data = await res.json() as { models?: { name: string }[] };
-    const models = data.models ?? [];
+    const allModels = data.models ?? [];
 
-    if (models.length === 0) {
-      // Ollama is running but no models are installed
-      return NextResponse.json({ available: true, model: null, noModels: true });
+    // Only keep chat-capable models
+    const chatModels = allModels
+      .map(m => m.name)
+      .filter(name => !isEmbeddingModel(name));
+
+    if (chatModels.length === 0) {
+      return NextResponse.json({ available: true, model: null, models: [], noModels: true });
     }
 
-    // Return the first installed model
-    const firstModel = models[0].name;
-    return NextResponse.json({ available: true, model: firstModel, models: models.map(m => m.name) });
+    return NextResponse.json({
+      available: true,
+      model:  chatModels[0],   // first chat model as default
+      models: chatModels,       // full list for the dropdown
+    });
 
   } catch {
-    // Ollama not running or unreachable
-    return NextResponse.json({ available: false, model: null });
+    return NextResponse.json({ available: false, model: null, models: [] });
   }
 }

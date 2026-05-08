@@ -37,7 +37,25 @@ RAG (Retrieval Augmented Generation) adalah teknik di mana kita **memberikan dok
 
 > *Diagram RAG — lihat gambar di bawah:*
 
-![Workflow RAG](images/Workflow.png)
+```mermaid
+flowchart LR
+    LLM["LLM Models\n(Gemini / Groq / Ollama)"]
+
+    subgraph pipeline["Inference Pipeline"]
+        A(["User"]) --> B["Ask Question"]
+        B --> C["Data Wrangling"]
+        C --> D["Prompt Formulation"]
+        D --> E["Formulates Answer"]
+        E --> F["Receives Answer"]
+    end
+
+    subgraph rag["Knowledge Base"]
+        Doc["Document"] --> KS["Knowledge Store"]
+    end
+
+    LLM -. provides model .-> E
+    KS --> C
+```
 
 ---
 
@@ -106,7 +124,7 @@ Selain permanent inventory, kamu bisa upload file langsung ke sesi chat yang sed
 5. File ini otomatis aktif sebagai knowledge base untuk chat selanjutnya
 
 > *Screenshot upload file panel — COMING SOON!*
-> ![Upload File Panel](COMING_SOON)
+> ![Upload File Panel](images/Web-Permanentinventory.png)
 
 > Mengupload file akan menyelesaikan **Side Quest: "Upload file directly to chatbot"**!
 

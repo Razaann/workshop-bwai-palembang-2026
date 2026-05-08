@@ -122,7 +122,9 @@ curl http://localhost:11434
 
 **Versi videonya bisa kamu lihat / klik pada thumbnail berikut:**
 
-[![Module 0c: Cara Instalasi Ollama](COMING_SOON)](COMING_SOON)
+[![Module 0c: Cara Instalasi Ollama](https://i.ytimg.com/an_webp/zKmb3QrWoJ4/mqdefault_6s.webp?du=3000&sqp=CO6X8s8G&rs=AOn4CLBigYHWOH5yP3y1JHzpq0leV5cfeQ)](https://youtu.be/zKmb3QrWoJ4?si=mmJtFJ1GfebbVauA)
+
+Untuk Video diatas saya provide dari source luar karena kebetulan saya sudah instalasi di local device saya, tapi arahannya sama persis dengan yang akan kita pelajari hari ini.
 
 ![Ollama Main Page](images/ollama-mainpage.png)
 
