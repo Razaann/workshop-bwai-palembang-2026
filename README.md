@@ -79,7 +79,7 @@ Kamu seharusnya melihat output versi, contoh: `v20.11.0` dan `10.2.4`.
 ### 1. Clone Repository
 
 ```bash
-git clone [COMING SOON!]
+git clone https://github.com/Bayhaqieee/workshop-bwai-palembang-2026.git
 cd workshop-bwai-palembang-2026
 ```
 
@@ -190,7 +190,7 @@ Setiap modul dirancang untuk **diselesaikan dalam 15–30 menit**. Kamu bisa iku
 
 ## Slide Presentasi
 
-> **[COMING SOON!]**
+> **[Slide](https://bit.ly/adit-bwai-palembang-2026)**
 
 ---
 
@@ -199,7 +199,7 @@ Setiap modul dirancang untuk **diselesaikan dalam 15–30 menit**. Kamu bisa iku
 Kalau ada pertanyaan atau kendala selama workshop, kamu bisa:
 - Submit `Issue` di repository ini
 - Tanya langsung ke instruktur saat sesi berlangsung
-- Hubungi via email: **[COMING SOON!]**
+- Hubungi via email: **adityabayhaqie@gmail.com**
 
 ---
 
